@@ -191,8 +191,8 @@ export default function App() {
       }}
     >
       {/* Navigation & Wallet Header */}
-      <nav className="w-full max-w-6xl flex justify-between items-center mb-8 p-4 bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-700/50 sticky top-4 z-50">
-        <div className="flex items-center gap-6">
+      <nav className="w-full max-w-6xl flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 p-4 bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-700/50 sticky top-4 z-50">
+        <div className="flex items-center gap-4 sm:gap-6">
           <button 
             onClick={() => setView('mint')}
             className={`flex items-center gap-2 font-mono text-sm tracking-wider transition-colors ${view === 'mint' ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}
@@ -211,7 +211,7 @@ export default function App() {
 
         <button
           onClick={connectWallet}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-sm transition-all ${
+          className={`flex items-center justify-center w-full sm:w-auto gap-2 px-4 py-2 rounded-lg font-mono text-sm transition-all ${
             walletAddress 
               ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/50' 
               : 'bg-slate-700 text-white hover:bg-slate-600'
@@ -238,11 +238,11 @@ export default function App() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="mb-12 text-center">
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-2">
+      <header className="mb-8 md:mb-12 text-center px-4">
+        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-2">
           AVALORE CARDS
         </h1>
-        <p className="text-slate-400 font-mono text-sm tracking-widest uppercase">
+        <p className="text-slate-400 font-mono text-xs md:text-sm tracking-widest uppercase">
           Avalanche Fuji Testnet MVP
         </p>
       </header>
@@ -305,7 +305,7 @@ export default function App() {
                       opacity: 1,
                     },
                   }}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-8"
+                  className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mt-8 w-full px-4 md:px-0"
                 >
                   {cards.map((card, index) => (
                     <Card 
@@ -337,10 +337,10 @@ export default function App() {
           /* Collection View */
           <div className="w-full">
             {/* Sort & Filter Toolbar */}
-            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 backdrop-blur-sm">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 backdrop-blur-sm mx-4 md:mx-0">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full md:w-auto">
                 <span className="text-slate-400 font-mono text-xs uppercase tracking-wider">Filter:</span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap justify-center gap-2">
                   {(['all', 'Common', 'Rare'] as const).map((option) => (
                     <button
                       key={option}
@@ -357,12 +357,12 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full md:w-auto mt-4 md:mt-0">
                 <span className="text-slate-400 font-mono text-xs uppercase tracking-wider">Sort:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-slate-700/50 text-white text-xs font-mono uppercase px-3 py-1 rounded-lg border border-slate-600 focus:border-cyan-500 focus:outline-none"
+                  className="bg-slate-700/50 text-white text-xs font-mono uppercase px-3 py-2 sm:py-1 rounded-lg border border-slate-600 focus:border-cyan-500 focus:outline-none w-full sm:w-auto"
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
@@ -388,7 +388,7 @@ export default function App() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 px-4 md:px-0">
                 {filteredCollection.map((card, idx) => (
                   <div key={`${card.uniqueId}-${idx}`} className="relative group">
                     <div className="aspect-[2/3] rounded-xl overflow-hidden border border-slate-700 bg-slate-800 relative transition-transform hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 cursor-pointer">
@@ -664,7 +664,7 @@ function Card({ card, onFlip, index, skipAnimation }: CardProps) {
       {/* Grid Card */}
       <motion.div
         ref={ref}
-        className="relative w-56 h-80 cursor-pointer perspective-1000 group"
+        className="relative w-full aspect-[2/3] max-w-[14rem] mx-auto cursor-pointer perspective-1000 group"
         onClick={handleCardClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}

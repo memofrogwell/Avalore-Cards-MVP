@@ -28,7 +28,7 @@ export function CardPack({ onClick }: CardPackProps) {
   };
 
   return (
-    <div className="relative perspective-1000 w-64 h-96 cursor-grab active:cursor-grabbing" onClick={onClick}>
+    <div className="relative perspective-1000 w-full max-w-[16rem] aspect-[2/3] cursor-grab active:cursor-grabbing mx-auto" onClick={onClick}>
       <motion.div
         className="w-full h-full relative transform-style-3d"
         style={{ rotateY }}
