@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avalore Cards - Interactive Prototype</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --cyan-400: #22d3ee;
+            --cyan-500: #06b6d4;
+            --purple-500: #a855f7;
+            --white: #ffffff;
+        }
+
+        body {
+            background-color: var(--slate-900);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            perspective: 2000px; /* Global perspective */
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--cyan-400), var(--purple-500));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--slate-400);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        /* Button */
+        .mint-btn {
+            background-color: var(--slate-800);
+            color: var(--white);
+            border: 1px solid var(--slate-700);
+            padding: 1rem 2rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+        }
+
+        .mint-btn:hover {
+            border-color: var(--cyan-500);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        .mint-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Loading */
+        .loading-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid var(--slate-700);
+            border-top-color: var(--cyan-400);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: var(--cyan-400);
+            font-family: 'JetBrains Mono', monospace;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+        /* Grid */
+        .card-grid {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+            perspective: 1000px;
+        }
+
+        @media (min-width: 768px) {
+            .card-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Card Container */
+        .card-container {
+            width: 14rem;
+            height: 20rem;
+            position: relative;
+            cursor: pointer;
+            /* Important: preserve-3d is on the inner element, but perspective is here */
+            perspective: 1000px; 
+        }
+
+        /* The flippable/tiltable wrapper */
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 0.75rem;
+        }
+
+        /* Flipped State */
+        .card-container.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* 
+           When flipped, we disable the transition for the tilt effect 
+           so it reacts instantly to mouse movement.
+           We add a class 'tilting' via JS when hovering.
+        */
+        .card-container.flipped.tilting .card-inner {
+            transition: none;
+        }
+
+        /* Card Faces */
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid var(--slate-700);
+            background-color: var(--slate-800);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Front (Face Down) */
+        .card-front {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(circle at center, rgba(51, 65, 85, 0.2), transparent);
+            z-index: 2;
+        }
+
+        .card-logo {
+            opacity: 0.5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-logo svg {
+            width: 3rem;
+            height: 3rem;
+            color: var(--cyan-500);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-logo span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+        }
+
+        /* Back (Face Up) */
+        .card-back {
+            transform: rotateY(180deg);
+            z-index: 1;
+            background: #000;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 4rem 1rem 1rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            text-align: left;
+            pointer-events: none;
+        }
+
+        .card-name {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--white);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .card-name.rare {
+            color: var(--cyan-400);
+        }
+
+        .card-rarity {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--slate-400);
+            margin-top: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-rarity.rare {
+            color: var(--purple-500);
+        }
+
+        /* Dynamic Holographic Shine */
+        .holo-sheen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 10;
+            /* Start transparent */
+            background: linear-gradient(
+                115deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.1) 30%,
+                rgba(34, 211, 238, 0.6) 45%,  /* Cyan */
+                rgba(168, 85, 247, 0.6) 55%,  /* Purple */
+                rgba(255, 255, 255, 0.1) 70%,
+                transparent 100%
+            );
+            background-size: 300% 300%;
+            background-position: 50% 50%;
+            mix-blend-mode: color-dodge;
+            opacity: 0; /* Hidden by default, shown on tilt */
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        /* Show sheen when tilting */
+        .card-container.flipped.tilting .holo-sheen {
+            opacity: 1;
+        }
+
+        .reset-btn {
+            margin-top: 3rem;
+            background: none;
+            border: none;
+            color: var(--slate-500);
+            font-family: 'JetBrains Mono', monospace;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .reset-btn:hover {
+            color: var(--white);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>AVALORE CARDS</h1>
+        <div class="subtitle">Avalanche Fuji Testnet MVP</div>
+    </header>
+
+    <button id="mintBtn" class="mint-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        MINT 1 PACK
+    </button>
+
+    <div id="loading" class="loading-container">
+        <div class="spinner"></div>
+        <div class="loading-text">MINTING PACK ON BLOCKCHAIN...</div>
+    </div>
+
+    <div id="cardGrid" class="card-grid">
+        <!-- Cards injected here -->
+    </div>
+
+    <button id="resetBtn" class="reset-btn">MINT ANOTHER PACK</button>
+
+    <script>
+        const CARDS = {
+            COMMON: [
+                { name: 'Wink', image: 'https://picsum.photos/seed/wink/400/600' },
+                { name: 'Skully', image: 'https://picsum.photos/seed/skully/400/600' },
+            ],
+            RARE: [
+                { name: 'Greg', image: 'https://picsum.photos/seed/greg/400/600' },
+                { name: 'Green Rabbit', image: 'https://picsum.photos/seed/greenrabbit/400/600' },
+            ],
+        };
+
+        const mintBtn = document.getElementById('mintBtn');
+        const loading = document.getElementById('loading');
+        const cardGrid = document.getElementById('cardGrid');
+        const resetBtn = document.getElementById('resetBtn');
+
+        mintBtn.addEventListener('click', startMint);
+        resetBtn.addEventListener('click', reset);
+
+        function startMint() {
+            mintBtn.style.display = 'none';
+            loading.style.display = 'flex';
+            
+            // Simulate Blockchain Delay
+            setTimeout(() => {
+                loading.style.display = 'none';
+                cardGrid.style.display = 'grid';
+                resetBtn.style.display = 'block';
+                generateCards();
+            }, 2000);
+        }
+
+        function generateCards() {
+            cardGrid.innerHTML = '';
+            
+            for (let i = 0; i < 4; i++) {
+                let isRare = false;
+                if (i === 3) {
+                    isRare = true; // Guaranteed Rare
+                } else {
+                    isRare = Math.random() < 0.1; // 10% Chance
+                }
+
+                const pool = isRare ? CARDS.RARE : CARDS.COMMON;
+                const cardData = pool[Math.floor(Math.random() * pool.length)];
+                
+                createCardElement(cardData, isRare ? 'Rare' : 'Common');
+            }
+        }
+
+        function createCardElement(data, rarity) {
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'card-container';
+            
+            const cardInner = document.createElement('div');
+            cardInner.className = 'card-inner';
+            
+            // Front (Face Down)
+            const front = document.createElement('div');
+            front.className = 'card-front';
+            front.innerHTML = `
+                <div class="card-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    <span>AVALORE</span>
+                </div>
+            `;
+
+            // Back (Face Up)
+            const back = document.createElement('div');
+            back.className = 'card-back';
+            
+            // Only Rares get the holo sheen
+            const shine = rarity === 'Rare' ? '<div class="holo-sheen"></div>' : '';
+            const sparkle = rarity === 'Rare' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-400"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>' : '';
+
+            back.innerHTML = `
+                <img src="${data.image}" alt="${data.name}" class="card-image" referrerpolicy="no-referrer">
+                <div class="card-info">
+                    <div class="card-name ${rarity === 'Rare' ? 'rare' : ''}">${data.name}</div>
+                    <div class="card-rarity ${rarity === 'Rare' ? 'rare' : ''}">
+                        ${rarity}
+                        ${sparkle}
+                    </div>
+                </div>
+                ${shine}
+            `;
+
+            cardInner.appendChild(front);
+            cardInner.appendChild(back);
+            cardContainer.appendChild(cardInner);
+            
+            // Interaction 1: Flip
+            cardContainer.addEventListener('click', () => {
+                if (!cardContainer.classList.contains('flipped')) {
+                    cardContainer.classList.add('flipped');
+                }
+            });
+
+            // Interaction 2 & 3: 3D Tilt & Dynamic Shine
+            cardContainer.addEventListener('mousemove', (e) => {
+                if (!cardContainer.classList.contains('flipped')) return;
+
+                const rect = cardContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Calculate percentage (-1 to 1)
+                const xPct = (x / rect.width - 0.5) * 2;
+                const yPct = (y / rect.height - 0.5) * 2;
+
+                // Tilt Logic (Max 15deg)
+                // RotateY corresponds to X movement (left/right)
+                // RotateX corresponds to Y movement (up/down) - inverted
+                const rotateX = yPct * -15;
+                const rotateY = xPct * 15;
+
+                cardContainer.classList.add('tilting');
+                cardInner.style.transform = `rotateY(${180 + rotateY}deg) rotateX(${rotateX}deg)`;
+
+                // Shine Logic (Rares only)
+                if (rarity === 'Rare') {
+                    const sheen = back.querySelector('.holo-sheen');
+                    if (sheen) {
+                        // Move background position based on mouse
+                        const bgX = 50 + (xPct * 50);
+                        const bgY = 50 + (yPct * 50);
+                        sheen.style.backgroundPosition = `${bgX}% ${bgY}%`;
+                        sheen.style.opacity = '1';
+                    }
+                }
+            });
+
+            // Reset on leave
+            cardContainer.addEventListener('mouseleave', () => {
+                if (!cardContainer.classList.contains('flipped')) return;
+                
+                cardContainer.classList.remove('tilting');
+                cardInner.style.transform = 'rotateY(180deg) rotateX(0deg)';
+                
+                if (rarity === 'Rare') {
+                    const sheen = back.querySelector('.holo-sheen');
+                    if (sheen) {
+                        sheen.style.opacity = '0';
+                    }
+                }
+            });
+
+            cardGrid.appendChild(cardContainer);
+        }
+
+        function reset() {
+            resetBtn.style.display = 'none';
+            cardGrid.style.display = 'none';
+            mintBtn.style.display = 'flex';
+            cardGrid.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
